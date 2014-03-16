@@ -146,30 +146,29 @@ function ready(error, world) {
   setTimeout(function(){
 
     planeOn = true;
-    centerAt([ 7.815112, 103.244004]);
-    document.getElementById("time").innerHTML = "1:07-1:21 - Transponders shut down";
+    centerAt([ 7.815112, 104.244004]);
     
     setTimeout(function(){
-      document.getElementById("time").innerHTML = "1:21-6:30 - Flight plan";
+      document.getElementById("time").innerHTML = "1:07-1:21 - Transponders shut down";
       
-      addLine([[7.815112, 103.244004], [39.823916, 116.47017]]);
-      centerAt([ 7.815112, 103.244004]);  
-      return;
+      addLine([[7.815112, 104.244004], [22.1678341,114.1288743], [39.823916, 116.47017]]);
+      centerAt([ 7.815112, 104.244004]);  
 
       setTimeout(function(){
-        document.getElementById("sidebar").innerHTML += "<br/>Layover in Honolulu";
-        document.getElementById("time").innerHTML = "2:50AM-1:49PM Friday Hawai'i";
+        document.getElementById("time").innerHTML = "Diversion was tracked by military radar";
+        centerAt([5.3857914,99.1920924]);
+        
         setTimeout(function(){
-          centerAt([37.77493, -122.419416]);
-          document.getElementById("sidebar").innerHTML += "<br/>Fly to SF";
-          document.getElementById("time").innerHTML = "3:49PM-8:45PM Friday Pacific";
+          centerAt([7.745831,96.046569]);
+          document.getElementById("time").innerHTML = "Course changes to Andaman Sea";
           setTimeout(function(){
-            planeOn = false;
-            selectCountry("United States");
-            document.getElementById("sidebar").innerHTML += "<br/>AMERICA";
+            addLine([[-5.7627365,107.920226],[-20.0429835,103.4885572],[-33.126009,89.5084548]]);
+            addLine([[21.7255298,100.4233716],[29.1154182,94.3451856],[38.3991177,75.4899003]]);
+            centerAt([7.745831,96.046569]);
+            document.getElementById("time").innerHTML = "Last telemetry came from a point on one of these lines";
           }, 1500);
         }, 1500);
-      }, 1800);
+      }, 700);
     }, 1500);
   }, 2000);
 }
