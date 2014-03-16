@@ -1,6 +1,6 @@
-# flightmap
+# MH370
 
-flightmap shows your flight over a rotating globe in D3
+flightmap shows a flight over a rotating globe in D3. I've modified it to show MH370.
 
 ## Available functions
 
@@ -8,13 +8,17 @@ Highlight and rotate the globe to a specific country (not all countries are incl
 
     selectCountry("United States")
 
+Turn the plane graphic on (currently just a red box)
+
+    planeOn = true;
+
 Rotate the globe to a specific latitude / longitude coordinate:
 
     centerAt( [ 37.77493, -122.419416 ] );
 
-Turn the plane graphic on (currently just a red box)
+Add a permanent path to the globe:
 
-    planeOn = true;
+    addLine( [[37.77493, -122.419416], [20.3492, -130.2921]] );
 
 ## International Date Line
 

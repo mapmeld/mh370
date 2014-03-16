@@ -6,7 +6,7 @@
     <meta charset="utf-8"/>
     <style type="text/css">
 html, body{
-  font-family: verdana, sans-serif;
+  font-family: arial, sans-serif;
 }
     </style>
   </head>
@@ -21,7 +21,7 @@ var width = 960,
 var planeOn = false;
 
 var projection = d3.geo.orthographic()
-    .scale(248)
+    .scale(288)
     .clipAngle(87);
 
 var canvas = d3.select("body").append("canvas")
@@ -36,12 +36,16 @@ var path = d3.geo.path()
 
 var title = d3.select("h1");
 
+var airpaths = {
+  type: "FeatureCollection",
+  features: [ ]
+};
+
 queue()
     .defer(d3.json, "world-110m.json")
-    .defer(d3.tsv, "world-country-names.tsv")
     .await(ready);
 
-function ready(error, world, names) {
+function ready(error, world) {
 //function ready(error, world) {
   var globe = {type: "Sphere"},
       land = topojson.object(world, world.objects.land),
@@ -49,15 +53,12 @@ function ready(error, world, names) {
       borders = topojson.mesh(world, world.objects.countries, function(a, b) { return a.id !== b.id; }),
       i = -1,
       n = countries.length;
-
-  countries.forEach(function(d) { d.name = names.filter(function(n) { return d.id == n.id; })[0].name; });
-  //countries.sort(function(a, b) { return a.name.localeCompare(b.name); });
-
+      
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "#bbb", ctx.beginPath(), path(land), ctx.fill();
   ctx.strokeStyle = "#fff", ctx.lineWidth = .5, ctx.beginPath(), path(borders), ctx.stroke();
   ctx.strokeStyle = "#000", ctx.lineWidth = 2, ctx.beginPath(), path(globe), ctx.stroke();
-  
+    
   var selectCountry = function(name){
     for(var c=0;c<countries.length;c++){
       if(countries[c].name == name){
@@ -74,12 +75,32 @@ function ready(error, world, names) {
               ctx.fillStyle = "#f00", ctx.beginPath(), path(countries[c]), ctx.fill();
               ctx.strokeStyle = "#fff", ctx.lineWidth = .5, ctx.beginPath(), path(borders), ctx.stroke();
               ctx.strokeStyle = "#000", ctx.lineWidth = 2, ctx.beginPath(), path(globe), ctx.stroke();
+
+              if(airpaths.features.length){
+                ctx.strokeStyle = "#00f", ctx.lineWidth = 2, ctx.beginPath(), path(airpaths), ctx.stroke();
+              }
+
             };
           });
       }
     }
     // if country was not included, return null
     return null;
+  };
+
+  var addLine = function(latlngs) {
+    latlngs.reverse();
+    for(var r=0;r<latlngs.length;r++){
+      latlngs[r].reverse();
+    }
+    airpaths.features.push({
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "LineString",
+        coordinates: latlngs
+      }
+    });
   };
 
   var centerAt = function(latlng){
@@ -89,11 +110,27 @@ function ready(error, world, names) {
         var p = [ latlng[1], latlng[0] ],
             r = d3.interpolate(projection.rotate(), [-p[0], -p[1]]);
         return function(t) {
-          projection.rotate(r(t));
+          var coords = r(t);
+          if(planeOn){
+            airpaths.features.push({
+              type: "Feature",
+              properties: {},
+              geometry: {
+                type: "Point",
+                coordinates: [ -1 * coords[0], -1 * coords[1] ]
+              }
+            });
+          }
+          projection.rotate(coords);
               ctx.clearRect(0, 0, width, height);
               ctx.fillStyle = "#bbb", ctx.beginPath(), path(land), ctx.fill();
               ctx.strokeStyle = "#fff", ctx.lineWidth = .5, ctx.beginPath(), path(borders), ctx.stroke();
               ctx.strokeStyle = "#000", ctx.lineWidth = 2, ctx.beginPath(), path(globe), ctx.stroke();
+
+              if(airpaths.features.length){
+                ctx.strokeStyle = "#00f", ctx.lineWidth = 3, ctx.beginPath(), path(airpaths), ctx.stroke();
+              }
+
               if(planeOn){
                 ctx.fillStyle = "#f00", ctx.beginPath(), ctx.rect( Math.round(width / 2) - 4, Math.round(height / 2) - 4, 8, 8 ), ctx.fill();
               }
@@ -102,39 +139,43 @@ function ready(error, world, names) {
   };
   
   // start flight animation
-
-  // select the United States
-  selectCountry("United States");
+  
+  // start in Malaysia
+  centerAt([2.754157,101.709501]);
+  document.getElementById("time").innerHTML = "12:41 - Takeoff from Kuala Lumpur";
   setTimeout(function(){
-    // highlight SF
-    document.getElementById("sidebar").innerHTML += "<br/>Left San Francisco";
-    centerAt([37.77493, -122.419416]);
+
+    planeOn = true;
+    centerAt([ 7.815112, 103.244004]);
+    document.getElementById("time").innerHTML = "1:07-1:21 - Transponders shut down";
+    
     setTimeout(function(){
-      // move to Honolulu
-      planeOn = true;
-      centerAt([21.683414, -158.031954]);
+      document.getElementById("time").innerHTML = "1:21-6:30 - Flight plan";
+      
+      addLine([[7.815112, 103.244004], [39.823916, 116.47017]]);
+      centerAt([ 7.815112, 103.244004]);  
+      return;
+
       setTimeout(function(){
         document.getElementById("sidebar").innerHTML += "<br/>Layover in Honolulu";
-        document.getElementById("time").innerHTML = "7:52PM Thursday - 5:25AM Friday Hawai`i";
+        document.getElementById("time").innerHTML = "2:50AM-1:49PM Friday Hawai'i";
         setTimeout(function(){
-          centerAt([ (180-158)/(180-158+7.07) * (21.683414-7.071623) + 7.071623, -180]);
+          centerAt([37.77493, -122.419416]);
+          document.getElementById("sidebar").innerHTML += "<br/>Fly to SF";
+          document.getElementById("time").innerHTML = "3:49PM-8:45PM Friday Pacific";
           setTimeout(function(){
-            document.getElementById("sidebar").innerHTML += "<br/>Crossed Int'l Dateline";
-            document.getElementById("time").innerHTML = "~7:00AM Friday/Saturday";
-            centerAt([7.071623, -180 - (180 - 171.552764)]);
-            setTimeout(function(){
-              document.getElementById("sidebar").innerHTML += "<br/>Arrived in Majuro";
-              document.getElementById("time").innerHTML = "8:34AM Saturday Majuro";
-            }, 2000);
-          }, 2000);
-        }, 800);
-      }, 2000);
-    }, 1050);
-  }, 1250);
+            planeOn = false;
+            selectCountry("United States");
+            document.getElementById("sidebar").innerHTML += "<br/>AMERICA";
+          }, 1500);
+        }, 1500);
+      }, 1800);
+    }, 1500);
+  }, 2000);
 }
     </script>
-    <h3 id="sidebar" style="position:fixed;left:20px;top:20px;">Plane Flight</h3>
+    <h3 id="sidebar" style="position:fixed;left:20px;top:20px;">Flight MH370</h3>
+    <h4 id="time" style="position:fixed;left:20px;"></h4>
     <canvas width="960" height="500"></canvas>
-    <h4 id="time" style="position:fixed;right:25px;top:25px;">4:10PM Thursday Pacific</h4>
   </body>
 </html>
